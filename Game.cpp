@@ -7,90 +7,26 @@ const float Game::PlayerSpeed = 100.f;
 const sf::Time Game::TimePerFrame = sf::seconds(1.f / 60.f);
 
 Game::Game()
-	: mWindow(sf::VideoMode(840, 600), "Donkey Kong 1981", sf::Style::Close)
-	, mTexture()
-	, mPlayer()
-	, mFont()
-	, mStatisticsText()
-	, mStatisticsUpdateTime()
-	, mStatisticsNumFrames(0)
-	, mIsMovingUp(false)
-	, mIsMovingDown(false)
-	, mIsMovingRight(false)
-	, mIsMovingLeft(false)
 {
-	mWindow.setFramerateLimit(160);
+	this->initVariables();
+	this->initWindow();
+	this->initTextures();
+	this->initBlocks();
+	this->initLadders();
+	this->initPlayer();
+	this->initStatistics();
+}
 
-	// Draw blocks
-
-	_TextureBlock.loadFromFile("Media/Textures/Block.png");
-	_sizeBlock = _TextureBlock.getSize();
-
-	for (int i = 0; i < BLOCK_COUNT_X; i++)
-	{
-		for (int j = 0; j < BLOCK_COUNT_Y; j++)
-		{
-			_Block[i][j].setTexture(_TextureBlock);
-			_Block[i][j].setPosition(100.f + 70.f * (i + 1), 0.f + BLOCK_SPACE * (j + 1));
-
-			std::shared_ptr<Entity> se = std::make_shared<Entity>();
-			se->m_sprite = _Block[i][j];
-			se->m_type = EntityType::block;
-			se->m_size = _TextureBlock.getSize();
-			se->m_position = _Block[i][j].getPosition();
-			EntityManager::m_Entities.push_back(se);
-		}
-	}
-
-	// Draw Echelles
-
-	_TextureEchelle.loadFromFile("Media/Textures/Echelle.png");
-
-	for (int i = 0; i < ECHELLE_COUNT; i++)
-	{
-		_Echelle[i].setTexture(_TextureEchelle);
-		_Echelle[i].setPosition(100.f + 70.f * (i + 1), 0.f + BLOCK_SPACE * (i + 1) + _sizeBlock.y );
-
-		std::shared_ptr<Entity> se = std::make_shared<Entity>();
-		se->m_sprite = _Echelle[i];
-		se->m_type = EntityType::echelle;
-		se->m_size = _TextureEchelle.getSize();
-		se->m_position = _Echelle[i].getPosition();
-		EntityManager::m_Entities.push_back(se);
-	}
-
-	// Draw Mario
-
-	mTexture.loadFromFile("Media/Textures/Mario_small_transparent.png"); // Mario_small.png");
-	_sizeMario = mTexture.getSize();
-	mPlayer.setTexture(mTexture);
-	sf::Vector2f posMario;
-	posMario.x = 100.f + 70.f;
-	posMario.y = BLOCK_SPACE * 5 - _sizeMario.y;
-
-	mPlayer.setPosition(posMario);
-
-	std::shared_ptr<Entity> player = std::make_shared<Entity>();
-	player->m_sprite = mPlayer;
-	player->m_type = EntityType::player;
-	player->m_size = mTexture.getSize();
-	player->m_position = mPlayer.getPosition();
-	EntityManager::m_Entities.push_back(player);
-
-	// Draw Statistic Font 
-
-	mFont.loadFromFile("Media/Sansation.ttf");
-	mStatisticsText.setString("Welcome to Donkey Kong 1981");
-	mStatisticsText.setFont(mFont);
-	mStatisticsText.setPosition(5.f, 5.f);
-	mStatisticsText.setCharacterSize(10);
+Game::~Game()
+{
+	delete this->window;
 }
 
 void Game::run()
 {
 	sf::Clock clock;
 	sf::Time timeSinceLastUpdate = sf::Time::Zero;
-	while (mWindow.isOpen())
+	while (this->window->isOpen())
 	{
 		sf::Time elapsedTime = clock.restart();
 		timeSinceLastUpdate += elapsedTime;
@@ -109,21 +45,20 @@ void Game::run()
 
 void Game::processEvents()
 {
-	sf::Event event;
-	while (mWindow.pollEvent(event))
+	while (this->window->pollEvent(this->ev))
 	{
-		switch (event.type)
+		switch (this->ev.type)
 		{
 		case sf::Event::KeyPressed:
-			handlePlayerInput(event.key.code, true);
+			handlePlayerInput(this->ev.key.code, true);
 			break;
 
 		case sf::Event::KeyReleased:
-			handlePlayerInput(event.key.code, false);
+			handlePlayerInput(this->ev.key.code, false);
 			break;
 
 		case sf::Event::Closed:
-			mWindow.close();
+			this->window->close();
 			break;
 		}
 	}
@@ -141,38 +76,94 @@ void Game::update(sf::Time elapsedTime)
 	if (mIsMovingRight)
 		movement.x += PlayerSpeed;
 
-	for (std::shared_ptr<Entity> entity : EntityManager::m_Entities)
-	{
-		if (entity->m_enabled == false)
-		{
-			continue;
-		}
-
-		if (entity->m_type != EntityType::player)
-		{
-			continue;
-		}
-
-		entity->m_sprite.move(movement * elapsedTime.asSeconds());
-	}
+	this->player->move(movement.x * elapsedTime.asSeconds(), movement.y * elapsedTime.asSeconds());
 }
 
 void Game::render()
 {
-	mWindow.clear();
+	this->window->clear();
 
-	for (std::shared_ptr<Entity> entity : EntityManager::m_Entities)
-	{
-		if (entity->m_enabled == false)
-		{
-			continue;
-		}
-
-		mWindow.draw(entity->m_sprite);
+	for (Block* block : this->blocks) {
+		block->render(*(this->window));
 	}
 
-	mWindow.draw(mStatisticsText);
-	mWindow.display();
+	for (Ladder* ladder : this->ladders) {
+		ladder->render(*(this->window));
+	}
+
+	this->player->render(*window);
+
+	this->window->draw(mStatisticsText);
+	this->window->display();
+}
+
+void Game::initVariables()
+{
+	this->window = nullptr;
+	this->mStatisticsNumFrames = 0;
+	this->mIsMovingUp = false;
+	this->mIsMovingDown = false;
+	this->mIsMovingRight = false;
+	this->mIsMovingLeft = false;
+}
+
+void Game::initWindow()
+{
+	this->videoMode.height = 600;
+	this->videoMode.width = 840;
+
+	this->window = new sf::RenderWindow(this->videoMode, "DonkeyKong", sf::Style::Titlebar | sf::Style::Close);
+
+	this->window->setFramerateLimit(60);
+}
+
+void Game::initTextures()
+{
+	mFont.loadFromFile("Media/Sansation.ttf");
+}
+
+void Game::initBlocks()
+{
+	for (int i = 0; i < BLOCK_COUNT_X; i++)
+	{
+		for (int j = 0; j < BLOCK_COUNT_Y; j++)
+		{
+			Block* block = new Block();
+			block->setPosition(
+				80.f + 70.f * (i + 1),
+				-30.f + BLOCK_SPACE * (j + 1) + block->getBounds().height);
+			this->blocks.push_back(block);
+		}
+	}
+}
+
+void Game::initLadders()
+{
+	for (int i = 0; i < ECHELLE_COUNT; i++)
+	{
+		Ladder* ladder = new Ladder();
+		ladder->setPosition(
+			80.f + 70.f * (i + 1),
+			-30.f + BLOCK_SPACE * (i + 1) + ladder->getBounds().height);
+		this->ladders.push_back(ladder);
+	}
+}
+
+void Game::initPlayer()
+{
+	this->player = new Player();
+	this->player->setPosition(
+		80.f + 70.f,
+		BLOCK_SPACE * 5 - this->player->getBounds().height
+	);
+}
+
+void Game::initStatistics()
+{
+	mStatisticsText.setString("Welcome to Donkey Kong 1981");
+	mStatisticsText.setFont(this->mFont);
+	mStatisticsText.setPosition(5.f, 5.f);
+	mStatisticsText.setCharacterSize(10);
 }
 
 void Game::updateStatistics(sf::Time elapsedTime)

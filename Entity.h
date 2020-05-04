@@ -10,18 +10,25 @@ enum EntityType
 class Entity
 {
 public:
-	Entity() { };
-	~Entity() { };
+	Entity();
+	~Entity();
+
+	//Accessor
+	const sf::Vector2f& getPos() const;
+	const sf::FloatRect getBounds() const;
+
+	//Modifiers
+	void setPosition(const sf::Vector2f pos);
+	void setPosition(const float x, const float y);
+
+	void render(sf::RenderTarget& target);
+
+private:
+	virtual void initTexture() = 0;
+	virtual void initSprite() = 0;
 
 public:
-	sf::Sprite m_sprite;
-	sf::Vector2u m_size;
-	sf::Vector2f m_position;
-	EntityType m_type;
-	bool m_enabled = true;
-
-	// Enemy only
-	bool m_bLeftToRight = true;
-	int m_times = 0;
+	sf::Sprite sprite;
+	sf::Texture texture;
 };
 
