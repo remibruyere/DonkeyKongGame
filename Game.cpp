@@ -3,7 +3,6 @@
 #include "Game.h"
 #include "EntityManager.h"
 
-const float Game::PlayerSpeed = 100.f;
 const sf::Time Game::TimePerFrame = sf::seconds(1.f / 60.f);
 
 Game::Game()
@@ -38,6 +37,7 @@ void Game::run()
 			update(TimePerFrame);
 		}
 
+		updateCollisions();
 		updateStatistics(elapsedTime);
 		render();
 	}
@@ -50,11 +50,11 @@ void Game::processEvents()
 		switch (this->ev.type)
 		{
 		case sf::Event::KeyPressed:
-			handlePlayerInput(this->ev.key.code, true);
+			this->player->updateInput(this->ev.key.code, true);
 			break;
 
 		case sf::Event::KeyReleased:
-			handlePlayerInput(this->ev.key.code, false);
+			this->player->updateInput(this->ev.key.code, false);
 			break;
 
 		case sf::Event::Closed:
@@ -66,17 +66,45 @@ void Game::processEvents()
 
 void Game::update(sf::Time elapsedTime)
 {
-	sf::Vector2f movement(0.f, 0.f);
-	if (mIsMovingUp)
-		movement.y -= PlayerSpeed;
-	if (mIsMovingDown)
-		movement.y += PlayerSpeed;
-	if (mIsMovingLeft)
-		movement.x -= PlayerSpeed;
-	if (mIsMovingRight)
-		movement.x += PlayerSpeed;
+	this->player->update(elapsedTime);
+}
 
-	this->player->move(movement.x * elapsedTime.asSeconds(), movement.y * elapsedTime.asSeconds());
+void Game::updateCollisions()
+{
+	this->player->updateWindowBoundsCollision(this->window);
+	for (Block* block : this->blocks) {
+		if (block->getBounds().intersects(this->player->getBounds())) {
+			if (this->player->getPosMiddle().y < block->getPosMiddle().y) {
+				this->player->setPosition(this->player->getPos().x, block->getPos().y - this->player->getBounds().height);
+			}
+			else {
+				this->player->setPosition(this->player->getPos().x, block->getPos().y + block->getBounds().height);
+			}
+		}
+	}
+	for (Ladder* ladder : this->ladders) {
+		if (ladder->getBounds().contains(this->player->getPosMiddle())) {
+			this->player->setOverLadder(true);
+			break;
+		}
+		this->player->setOverLadder(false);
+	}
+}
+
+void Game::updateStatistics(sf::Time elapsedTime)
+{
+	mStatisticsUpdateTime += elapsedTime;
+	mStatisticsNumFrames += 1;
+
+	if (mStatisticsUpdateTime >= sf::seconds(1.0f))
+	{
+		mStatisticsText.setString(
+			"Frames / Second = " + toString(mStatisticsNumFrames) + "\n" +
+			"Time / Update = " + toString(mStatisticsUpdateTime.asMicroseconds() / mStatisticsNumFrames) + "us");
+
+		mStatisticsUpdateTime -= sf::seconds(1.0f);
+		mStatisticsNumFrames = 0;
+	}
 }
 
 void Game::render()
@@ -91,7 +119,7 @@ void Game::render()
 		ladder->render(*(this->window));
 	}
 
-	this->player->render(*window);
+	this->player->render(*(this->window));
 
 	this->window->draw(mStatisticsText);
 	this->window->display();
@@ -101,10 +129,6 @@ void Game::initVariables()
 {
 	this->window = nullptr;
 	this->mStatisticsNumFrames = 0;
-	this->mIsMovingUp = false;
-	this->mIsMovingDown = false;
-	this->mIsMovingRight = false;
-	this->mIsMovingLeft = false;
 }
 
 void Game::initWindow()
@@ -131,7 +155,7 @@ void Game::initBlocks()
 			Block* block = new Block();
 			block->setPosition(
 				80.f + 70.f * (i + 1),
-				-30.f + BLOCK_SPACE * (j + 1) + block->getBounds().height);
+				BLOCK_SPACE * (j + 1));
 			this->blocks.push_back(block);
 		}
 	}
@@ -139,12 +163,12 @@ void Game::initBlocks()
 
 void Game::initLadders()
 {
-	for (int i = 0; i < ECHELLE_COUNT; i++)
+	for (int i = 0; i < LADDER_COUNT; i++)
 	{
 		Ladder* ladder = new Ladder();
 		ladder->setPosition(
 			80.f + 70.f * (i + 1),
-			-30.f + BLOCK_SPACE * (i + 1) + ladder->getBounds().height);
+			BLOCK_SPACE * (i + 1) + 33.f);
 		this->ladders.push_back(ladder);
 	}
 }
@@ -164,45 +188,4 @@ void Game::initStatistics()
 	mStatisticsText.setFont(this->mFont);
 	mStatisticsText.setPosition(5.f, 5.f);
 	mStatisticsText.setCharacterSize(10);
-}
-
-void Game::updateStatistics(sf::Time elapsedTime)
-{
-	mStatisticsUpdateTime += elapsedTime;
-	mStatisticsNumFrames += 1;
-
-	if (mStatisticsUpdateTime >= sf::seconds(1.0f))
-	{
-		mStatisticsText.setString(
-			"Frames / Second = " + toString(mStatisticsNumFrames) + "\n" +
-			"Time / Update = " + toString(mStatisticsUpdateTime.asMicroseconds() / mStatisticsNumFrames) + "us");
-
-		mStatisticsUpdateTime -= sf::seconds(1.0f);
-		mStatisticsNumFrames = 0;
-	}
-
-	//
-	// Handle collision
-	//
-
-	if (mStatisticsUpdateTime >= sf::seconds(0.050f))
-	{
-		// Handle collision weapon enemies
-	}
-}
-
-void Game::handlePlayerInput(sf::Keyboard::Key key, bool isPressed)
-{
-	if (key == sf::Keyboard::Up)
-		mIsMovingUp = isPressed;
-	else if (key == sf::Keyboard::Down)
-		mIsMovingDown = isPressed;
-	else if (key == sf::Keyboard::Left)
-		mIsMovingLeft = isPressed;
-	else if (key == sf::Keyboard::Right)
-		mIsMovingRight = isPressed;
-
-	if (key == sf::Keyboard::Space)
-	{
-	}
 }

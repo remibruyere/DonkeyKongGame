@@ -14,6 +14,14 @@ const sf::Vector2f& Entity::getPos() const
 	return this->sprite.getPosition();
 }
 
+const sf::Vector2f Entity::getPosMiddle() const
+{
+	return sf::Vector2f(
+		this->getPos().x + this->getBounds().width / 2,
+		this->getPos().y + this->getBounds().height / 2
+	);
+}
+
 const sf::FloatRect Entity::getBounds() const
 {
 	return this->sprite.getGlobalBounds();

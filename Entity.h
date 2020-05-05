@@ -15,6 +15,7 @@ public:
 
 	//Accessor
 	const sf::Vector2f& getPos() const;
+	const sf::Vector2f getPosMiddle() const;
 	const sf::FloatRect getBounds() const;
 
 	//Modifiers
