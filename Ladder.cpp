@@ -22,5 +22,5 @@ void Ladder::initTexture()
 void Ladder::initSprite()
 {
 	this->sprite.setTexture(this->texture);
-	//this->sprite.scale(0.1f, 0.1f);
+	this->sprite.scale(1.1f, 1.85f);
 }

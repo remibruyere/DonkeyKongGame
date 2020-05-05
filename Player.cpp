@@ -14,8 +14,28 @@ Player::~Player()
 
 void Player::setOverLadder(bool isOverLadder)
 {
-	if (this->isOverLadder != isOverLadder)
-		this->isOverLadder = isOverLadder;
+	this->canClimb = isOverLadder;
+}
+
+void Player::OnCollision(sf::Vector2f direction)
+{
+	if (direction.x < 0.f) {
+		//Collision to the left
+		this->velocity.x = 0.f;
+	}
+	else if (direction.x > 0.f) {
+		//Collision to the right
+		this->velocity.x = 0.f;
+	}
+	if (direction.y < 0.f) {
+		//Collision on the bottom
+		this->velocity.y = 0.f;
+		this->canJump = true;
+	}
+	else if (direction.y > 0.f) {
+		//Collision on the top
+		this->velocity.y = 0.f;
+	}
 }
 
 void Player::updateInput(sf::Keyboard::Key key, bool isPressed)
@@ -29,8 +49,10 @@ void Player::updateInput(sf::Keyboard::Key key, bool isPressed)
 	else if (key == sf::Keyboard::Right)
 		this->isMovingRight = isPressed;
 
-	if (key == sf::Keyboard::Space)
+	if (key == sf::Keyboard::Space && this->canJump)
 	{
+		this->canJump = false;
+		this->velocity.y = -sqrtf(2.f * 981.f * this->jumpHeight);
 	}
 }
 
@@ -50,18 +72,39 @@ void Player::updateWindowBoundsCollision(const sf::RenderTarget* target)
 		this->setPosition(this->getBounds().left, target->getSize().y - this->getBounds().height);
 }
 
-void Player::updateMove(sf::Time elapsedTime) {
-	sf::Vector2f movement(0.f, 0.f);
-	if (this->isMovingUp)
-		movement.y -= 1.f;
-	if (this->isMovingDown)
-		movement.y += 1.f;
-	if (this->isMovingLeft)
-		movement.x -= 1.f;
-	if (this->isMovingRight)
-		movement.x += 1.f;
+void Player::updateMove(sf::Time elapsedTime) 
+{
+	if (this->isClimbing && !this->canClimb) {
+		this->isClimbing = false;
+	}
+	this->velocity.x = 0.f;
+	if (!this->isClimbing) {
+		this->velocity.y += 981.f * elapsedTime.asSeconds();
+	} else {
+		this->velocity.y = 0;
+	}
+	if (this->canClimb) {
+		if (this->isMovingUp) {
+			this->velocity.y = -this->movementSpeed;
+			this->isClimbing = true;
+		}
+		if (this->isMovingDown) {
+			this->velocity.y = 0;
+			this->velocity.y = this->movementSpeed;
+		}
+	}
+	if (!this->isClimbing) {
+		if (this->isMovingLeft) {
+			this->velocity.x -= this->movementSpeed;
+		}
+		if (this->isMovingRight) {
+			this->velocity.x += this->movementSpeed;
+		}
+	}
 
-	this->move(movement.x * elapsedTime.asSeconds(), movement.y * elapsedTime.asSeconds());
+	this->move(
+		this->velocity.x * elapsedTime.asSeconds(), 
+		this->velocity.y * elapsedTime.asSeconds());
 }
 
 void Player::update(sf::Time elapsedTime)
@@ -71,7 +114,7 @@ void Player::update(sf::Time elapsedTime)
 
 void Player::move(const float dirX, const float dirY)
 {
-	this->sprite.move(this->movementSpeed * dirX, this->movementSpeed * dirY);
+	this->sprite.move(dirX, dirY);
 }
 
 void Player::initVariables()
@@ -82,8 +125,10 @@ void Player::initVariables()
 	this->isMovingDown = false;
 	this->isMovingLeft = false,
 	this->isMovingRight = false;
-	this->isOverLadder = false;
+	this->canClimb = false;
 	this->isClimbing = false;
+	this->canJump = true;
+	this->jumpHeight = 35.f;
 }
 
 void Player::initTexture()

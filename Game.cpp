@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "StringHelpers.h"
 #include "Game.h"
-#include "EntityManager.h"
 
 const sf::Time Game::TimePerFrame = sf::seconds(1.f / 60.f);
 
@@ -72,22 +71,27 @@ void Game::update(sf::Time elapsedTime)
 void Game::updateCollisions()
 {
 	this->player->updateWindowBoundsCollision(this->window);
-	for (Block* block : this->blocks) {
-		if (block->getBounds().intersects(this->player->getBounds())) {
-			if (this->player->getPosMiddle().y < block->getPosMiddle().y) {
-				this->player->setPosition(this->player->getPos().x, block->getPos().y - this->player->getBounds().height);
-			}
-			else {
-				this->player->setPosition(this->player->getPos().x, block->getPos().y + block->getBounds().height);
-			}
-		}
-	}
 	for (Ladder* ladder : this->ladders) {
-		if (ladder->getBounds().contains(this->player->getPosMiddle())) {
+		if (ladder->getBounds().contains(this->player->getPosMiddle()) || ladder->getBounds().contains(this->player->getPosMiddleBottom())) {
 			this->player->setOverLadder(true);
 			break;
 		}
 		this->player->setOverLadder(false);
+	}
+	if (!this->player->isClimbing) {
+		for (Block* block : this->blocks) {
+			if (block->getBounds().intersects(this->player->getBounds())) {
+				if (this->player->getPosMiddle().y < block->getPosMiddle().y) {
+					this->player->setPosition(this->player->getPos().x, block->getPos().y - this->player->getBounds().height);
+					this->player->OnCollision(sf::Vector2f(0.f, -1.f));
+				}
+				else {
+					this->player->setPosition(this->player->getPos().x, block->getPos().y + block->getBounds().height);
+					this->player->OnCollision(sf::Vector2f(0.f, 1.f));
+				}
+				break;
+			}
+		}
 	}
 }
 
@@ -133,7 +137,7 @@ void Game::initVariables()
 
 void Game::initWindow()
 {
-	this->videoMode.height = 600;
+	this->videoMode.height = 800;
 	this->videoMode.width = 840;
 
 	this->window = new sf::RenderWindow(this->videoMode, "DonkeyKong", sf::Style::Titlebar | sf::Style::Close);
@@ -168,7 +172,7 @@ void Game::initLadders()
 		Ladder* ladder = new Ladder();
 		ladder->setPosition(
 			80.f + 70.f * (i + 1),
-			BLOCK_SPACE * (i + 1) + 33.f);
+			BLOCK_SPACE * (i + 1) + 1.f);
 		this->ladders.push_back(ladder);
 	}
 }
