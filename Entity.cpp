@@ -11,41 +11,43 @@ Entity::~Entity()
 
 const sf::Vector2f& Entity::getPos() const
 {
-	return this->sprite.getPosition();
+	return this->animatedSprite.getPosition();
 }
 
-const sf::Vector2f Entity::getPosMiddle() const
+const sf::Vector2f Entity::getPosBottom() const
 {
 	return sf::Vector2f(
-		this->getPos().x + this->getBounds().width / 2,
+		this->getPos().x,
 		this->getPos().y + this->getBounds().height / 2
 	);
 }
 
-const sf::Vector2f Entity::getPosMiddleBottom() const
+const sf::Vector2f Entity::getPosTop() const
 {
 	return sf::Vector2f(
-		this->getPos().x + this->getBounds().width / 2,
-		this->getPos().y + this->getBounds().height
+		this->getPos().x,
+		this->getPos().y - this->getBounds().height / 2
 	);
 }
 
 const sf::FloatRect Entity::getBounds() const
 {
-	return this->sprite.getGlobalBounds();
+	return this->animatedSprite.getGlobalBounds();
 }
 
 void Entity::setPosition(const sf::Vector2f pos)
 {
-	this->sprite.setPosition(pos);
+	//std::cout << "set pos" << pos.x << ":" << pos.y << std::endl;
+	this->animatedSprite.setPosition(pos);
 }
 
 void Entity::setPosition(const float x, const float y)
 {
-	this->sprite.setPosition(x, y);
+	//std::cout << "set pos" << x << ":" << y << std::endl;
+	this->animatedSprite.setPosition(x, y);
 }
 
 void Entity::render(sf::RenderTarget& target)
 {
-	target.draw(this->sprite);
+	target.draw(this->animatedSprite);
 }

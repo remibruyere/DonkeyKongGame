@@ -10,6 +10,11 @@ public:
 private:
 	// Extend from Entity
 	virtual void initTexture() override;
+	virtual void initAnimation() override;
 	virtual void initSprite() override;
+
+private:
+	sf::Texture texture;
+	Animation blockAnimation;
 };
 

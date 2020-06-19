@@ -1,35 +1,33 @@
 #include "pch.h"
-#include "Block.h"
+#include "StaticBarrel.h"
 
-Block::Block()
+StaticBarrel::StaticBarrel()
 {
 	this->initTexture();
 	this->initAnimation();
 	this->initSprite();
 }
 
-Block::~Block()
+StaticBarrel::~StaticBarrel()
 {
 }
 
-void Block::initTexture()
+void StaticBarrel::initTexture()
 {
-	if (!this->texture.loadFromFile("Media/Textures/floor.png"))
+	if (!this->texture.loadFromFile("Media/Textures/barrel_static.png"))
 	{
-		std::cout << "ERROR::BLOCK::INITTEXTURE::Could not load texture file." << "\n";
+		std::cout << "ERROR::STATICBARREL::INITTEXTURE::Could not load texture file." << "\n";
 	}
 }
 
-void Block::initAnimation()
+void StaticBarrel::initAnimation()
 {
 	this->blockAnimation.setSpriteSheet(this->texture);
-	this->blockAnimation.addFrame(sf::IntRect(0, 0, 10, 10));
-	this->blockAnimation.addFrame(sf::IntRect(11, 0, 8, 10));
-	this->blockAnimation.addFrame(sf::IntRect(20, 0, 9, 10));
+	this->blockAnimation.addFrame(sf::IntRect(0, 0, 12, 18));
 }
 
 
-void Block::initSprite()
+void StaticBarrel::initSprite()
 {
 	this->animatedSprite = AnimatedSprite(sf::seconds(0.f), true, false);
 	this->animatedSprite.setAnimation(this->blockAnimation);

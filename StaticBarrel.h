@@ -1,11 +1,11 @@
 #pragma once
 #include "Entity.h"
 
-class Ladder: public Entity
+class StaticBarrel : public Entity
 {
 public:
-	Ladder();
-	virtual ~Ladder();
+	StaticBarrel();
+	virtual ~StaticBarrel();
 
 private:
 	// Extend from Entity
@@ -15,5 +15,8 @@ private:
 
 private:
 	sf::Texture texture;
-	Animation ladderAnimation;
+	Animation blockAnimation;
 };
+
+
+

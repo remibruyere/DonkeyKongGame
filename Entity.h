@@ -1,11 +1,5 @@
 #pragma once
-
-enum EntityType
-{
-	player,
-	block,
-	echelle
-};
+#include "AnimationSprite.h"
 
 class Entity
 {
@@ -15,8 +9,8 @@ public:
 
 	//Accessor
 	const sf::Vector2f& getPos() const;
-	const sf::Vector2f getPosMiddle() const;
-	const sf::Vector2f getPosMiddleBottom() const;
+	const sf::Vector2f getPosBottom() const;
+	const sf::Vector2f getPosTop() const;
 	const sf::FloatRect getBounds() const;
 
 	//Modifiers
@@ -27,10 +21,10 @@ public:
 
 private:
 	virtual void initTexture() = 0;
+	virtual void initAnimation() = 0;
 	virtual void initSprite() = 0;
 
 public:
-	sf::Sprite sprite;
-	sf::Texture texture;
+	AnimatedSprite animatedSprite;
 };
 
