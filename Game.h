@@ -27,6 +27,12 @@ private:
 	void processEvents();
 	void update(sf::Time elapsedTime);
 	void updateCollisions();
+	void playerWindowCollisions();
+	void barrelWindowCollisions();
+	void ladderPlayerClimbingCollisions();
+	void barrelPlayerCollisions();
+	void ladderPlayerCollisions();
+	void barrelBlockCollisions();
 	void updateStatistics(sf::Time elapsedTime);
 	void renderGUI();
 	void render();

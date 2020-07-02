@@ -88,6 +88,16 @@ void Game::update(sf::Time elapsedTime)
 
 void Game::updateCollisions()
 {
+	barrelBlockCollisions();
+	ladderPlayerCollisions();
+	barrelPlayerCollisions();
+	ladderPlayerClimbingCollisions();
+	barrelWindowCollisions();
+	playerWindowCollisions();
+}
+
+void Game::barrelBlockCollisions()
+{
 	for (Barrel* barrel : this->barrels) {
 		for (Block* block : this->blocks) {
 			if (block->getBounds().intersects(barrel->getBounds())) {
@@ -103,6 +113,10 @@ void Game::updateCollisions()
 			}
 		}
 	}
+}
+
+void Game::ladderPlayerCollisions()
+{
 	for (Ladder* ladder : this->ladders) {
 		if (ladder->getBounds().contains(this->player->getPos()) || ladder->getBounds().contains(this->player->getPosBottom())) {
 			this->player->setOverLadder(true);
@@ -110,12 +124,20 @@ void Game::updateCollisions()
 		}
 		this->player->setOverLadder(false);
 	}
+}
+
+void Game::barrelPlayerCollisions()
+{
 	for (Barrel* barrel : this->barrels) {
 		if (barrel->getBounds().intersects(this->player->getBounds()) || barrel->getBounds().intersects(this->player->getBounds())) {
 			this->player->alive = false;
 			break;
 		}
 	}
+}
+
+void Game::ladderPlayerClimbingCollisions()
+{
 	if (!this->player->isClimbing) {
 		for (Block* block : this->blocks) {
 			if (block->getBounds().intersects(this->player->getBounds())) {
@@ -134,6 +156,10 @@ void Game::updateCollisions()
 			}
 		}
 	}
+}
+
+void Game::barrelWindowCollisions()
+{
 	for (Barrel* barrel : this->barrels) {
 		barrel->updateWindowBoundsCollision(this->window);
 	}
@@ -142,10 +168,14 @@ void Game::updateCollisions()
 			this->barrels.begin(),
 			this->barrels.end(),
 			[this](Barrel* barrel) {
-				return barrel->isOutOfWindow(this->window);
-			}
+		return barrel->isOutOfWindow(this->window);
+	}
 		),
 		this->barrels.end());
+}
+
+void Game::playerWindowCollisions()
+{
 	this->player->updateWindowBoundsCollision(this->window);
 }
 
@@ -272,7 +302,7 @@ void Game::initBlocks()
 	float blockHeight = block->getBounds().height;
 	delete block;
 	// Height max : 800 | Width max : 600
-	float ladderPositions[8][2][2] = {
+	float floorPositions[8][2][2] = {
 		{{0,330}, {380,330}},
 		{{380,330}, {550,350}},
 		{{40,440}, {600,410}},
@@ -283,13 +313,13 @@ void Game::initBlocks()
 		{{0,800}, {300,800}}
 	};
 	for (int i = 0; i < 8; ++i) {
-		int numberBlock = abs(int(round((ladderPositions[i][0][0] - ladderPositions[i][1][0]) / blockWidth)));
-		float stepHeight = -((ladderPositions[i][0][1] - ladderPositions[i][1][1]) / (blockHeight));
+		int numberBlock = abs(int(round((floorPositions[i][0][0] - floorPositions[i][1][0]) / blockWidth)));
+		float stepHeight = -((floorPositions[i][0][1] - floorPositions[i][1][1]) / (blockHeight));
 		for (int j = 0; j < numberBlock; ++j) {
 			Block* block = new Block();
 			block->setPosition(
-				ladderPositions[i][0][0] + block->getBounds().width / 2 + block->getBounds().width * j,
-				ladderPositions[i][0][1] - block->getBounds().height / 2 + stepHeight * j);
+				floorPositions[i][0][0] + blockWidth / 2 + blockWidth * j,
+				floorPositions[i][0][1] - blockHeight / 2 + stepHeight * j);
 			this->blocks.push_back(block);
 		}
 	}
@@ -297,13 +327,29 @@ void Game::initBlocks()
 
 void Game::initLadders()
 {
-	for (int i = 0; i < LADDER_COUNT; i++)
-	{
-		Ladder* ladder = new Ladder();
-		ladder->setPosition(
-			80.f + 70.f * (i + 1),
-			BLOCK_SPACE * (i + 1) + ladder->getBounds().height / 2 + 1.f);
-		this->ladders.push_back(ladder);
+	Ladder* ladder = new Ladder();
+	float ladderWidth = ladder->getBounds().width;
+	float ladderHeight = ladder->getBounds().height;
+	delete ladder;
+	// Height max : 800 | Width max : 600
+	float ladderPositions[7][2][2] = {
+		{{520,335}, {520,380}},
+		{{60,435}, {60,490}},
+		{{300,420}, {300,500}},
+		{{520,515}, {520,570}},
+		{{60,615}, {60,670}},
+		{{300,600}, {300,690}},
+		{{520,715}, {520,770}},
+	};
+	for (int i = 0; i < 7; ++i) {
+		int numberBlock = abs(int(round((ladderPositions[i][0][1] - ladderPositions[i][1][1]) / ladderHeight)));
+		for (int j = 0; j < numberBlock; ++j) {
+			Ladder* ladder = new Ladder();
+			ladder->setPosition(
+				ladderPositions[i][0][0] + ladderWidth / 2,
+				ladderPositions[i][0][1] - ladderHeight / 2 + ladderHeight * j);
+			this->ladders.push_back(ladder);
+		}
 	}
 }
 

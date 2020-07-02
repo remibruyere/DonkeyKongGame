@@ -21,7 +21,7 @@ void Donkey::update(sf::Time elapsedTime)
 void Donkey::spawnBarrel(sf::Time elapsedTime, std::vector<Barrel*>& barrels)
 {
 	this->lastSpawnBarrelTime += elapsedTime;
-	std::cout << this->animatedSprite.getCurrentFrame() << std::endl;
+	//std::cout << this->animatedSprite.getCurrentFrame() << std::endl;
 	if (this->lastSpawnBarrelTime >= sf::seconds(3.f) && this->animatedSprite.getCurrentFrame() == 3) {
 		this->lastSpawnBarrelTime = sf::seconds(0.f);
 		Barrel* barrel = new Barrel();
@@ -29,7 +29,7 @@ void Donkey::spawnBarrel(sf::Time elapsedTime, std::vector<Barrel*>& barrels)
 			this->getPosBottom().x + this->getBounds().width / 2 + barrel->getBounds().width / 2,
 			this->getPosBottom().y - barrel->getBounds().height / 2
 		);
-		std::cout << "spawn barrel" << std::endl;
+		//std::cout << "spawn barrel" << std::endl;
 		barrels.push_back(barrel);
 	}
 }
